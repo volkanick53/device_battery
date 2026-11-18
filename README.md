@@ -29,6 +29,7 @@ The readout follows the light/dark taskbar theme and display scaling, and turns 
 | Source | Devices | Status |
 |---|---|---|
 | `PnpBatteryProvider` | Bluetooth / Bluetooth LE devices that report a battery level to Windows (keyboards, mice, many headsets) | Working |
+| `AirPodsBatteryProvider` | AirPods / Powerbeats / Beats paired with this PC and connected. Read from Apple's Bluetooth LE advertisement (left / right / case, 10 % steps). Appears when the case is opened or a pod is moved; the packet carries no identity, so the closest AirPods are assumed to be yours | Working |
 | `HidBatteryProvider` | SteelSeries Arctis Nova 3P / 3X Wireless (2.4 GHz USB dongle) | Working, verified on hardware |
 | `HidBatteryProvider` | Logitech HID++ receivers (Unifying / Bolt / Lightspeed), other dongles | Not implemented, see below |
 

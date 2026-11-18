@@ -90,6 +90,38 @@ public sealed class PnpBatteryProvider : IBatteryProvider
             .ToList();
     }
 
+    /// <summary>
+    /// Looks for paired Bluetooth devices whose name contains one of <paramref name="needles"/>.
+    /// Returns (anyPaired, anyConnected). Used to hide AirPods that Windows is no longer connected to.
+    /// </summary>
+    internal static (bool Paired, bool Connected) QueryNamedBluetooth(params string[] needles)
+    {
+        bool paired = false, connected = false;
+        IntPtr set = IntPtr.Zero;
+        try
+        {
+            set = SetupDiGetClassDevsW(IntPtr.Zero, null, IntPtr.Zero, DIGCF_ALLCLASSES | DIGCF_PRESENT);
+            if (set == InvalidHandle || set == IntPtr.Zero) return (false, false);
+            var data = new SP_DEVINFO_DATA { cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf<SP_DEVINFO_DATA>() };
+            for (uint i = 0; SetupDiEnumDeviceInfo(set, i, ref data); i++)
+            {
+                string id = ReadInstanceId(set, ref data);
+                if (!id.StartsWith(@"BTHENUM\DEV_", StringComparison.OrdinalIgnoreCase)
+                    && !id.StartsWith(@"BTHLE\DEV_", StringComparison.OrdinalIgnoreCase)) continue;
+                string name = ReadString(set, ref data, FriendlyName) ?? ReadString(set, ref data, BusReportedDesc) ?? "";
+                if (!needles.Any(n => name.Contains(n, StringComparison.OrdinalIgnoreCase))) continue;
+                paired = true;
+                if (ReadBool(set, ref data, IsConnectedKey) == true) connected = true;
+            }
+        }
+        catch { }
+        finally
+        {
+            if (set != IntPtr.Zero && set != InvalidHandle) SetupDiDestroyDeviceInfoList(set);
+        }
+        return (paired, connected);
+    }
+
     private static DeviceKind ResolveKind(DeviceBatteryInfo d, Dictionary<string, HashSet<string>> classes)
     {
         if (classes.TryGetValue(d.Id, out var set))

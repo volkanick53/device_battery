@@ -18,7 +18,8 @@ public sealed class TrayApplicationContext : ApplicationContext
     private readonly Dictionary<string, TrayEntry> _entries = new();
     private TaskbarWidget? _widget;
     private readonly ContextMenuStrip _menu;
-    private readonly IBatteryProvider[] _providers = { new PnpBatteryProvider(), new HidBatteryProvider() };
+    private readonly AirPodsBatteryProvider _airPods = new();
+    private readonly IBatteryProvider[] _providers;
     private readonly Dictionary<string, bool> _alerted = new();
     private readonly CancellationTokenSource _cts = new();
     private CancellationTokenSource? _intervalCts;
@@ -29,6 +30,7 @@ public sealed class TrayApplicationContext : ApplicationContext
 
     public TrayApplicationContext()
     {
+        _providers = new IBatteryProvider[] { new PnpBatteryProvider(), new HidBatteryProvider(), _airPods };
         _menu = new ContextMenuStrip
         {
             Renderer = new DarkMenuRenderer(),
@@ -56,6 +58,10 @@ public sealed class TrayApplicationContext : ApplicationContext
         _msgWindow = new MessageWindow(
             onDeviceChange: () => { _debounce.Stop(); _debounce.Start(); },
             onQuit: ExitThread);
+
+        // The BLE watcher needs a moment after start-up to hear the AirPods; rescan as soon as it does.
+        var ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
+        _airPods.DeviceAppeared += () => ui.Post(_ => { _debounce.Stop(); _debounce.Start(); }, null);
 
         _ = RunLoopAsync();
     }
@@ -319,6 +325,15 @@ public sealed class TrayApplicationContext : ApplicationContext
             choice.Click += (_, _) => { Settings.IntervalMinutes = m; _intervalCts?.Cancel(); };
             interval.DropDownItems.Add(choice);
         }
+        // Keep the submenu on the same monitor as the main menu: with a second monitor to the right, WinForms
+        // happily opens it there. Flip it to the left when it would cross this monitor's right edge.
+        interval.DropDownOpening += (_, _) =>
+        {
+            var screen = Screen.FromRectangle(_menu.Bounds).Bounds;
+            interval.DropDownDirection = _menu.Right + interval.DropDown.PreferredSize.Width > screen.Right
+                ? ToolStripDropDownDirection.Left
+                : ToolStripDropDownDirection.Right;
+        };
         _menu.Items.Add(interval);
 
         var refresh = new ToolStripMenuItem("Refresh now");

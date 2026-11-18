@@ -8,7 +8,7 @@
     <Product>Device Battery</Product>
     <AssemblyTitle>Device Battery</AssemblyTitle>
     <Description>Battery levels of wireless keyboards, mice and headsets on the Windows taskbar</Description>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
