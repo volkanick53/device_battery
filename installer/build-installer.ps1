@@ -1,6 +1,6 @@
 # Builds dist\DeviceBattery-Setup-<version>.exe (and a portable zip).
 # Needs: .NET 8 SDK and Inno Setup 6 (winget install JRSoftware.InnoSetup).
-param([string]$Version = "1.1.0")
+param([string]$Version = "1.1.1")
 $ErrorActionPreference = "Stop"
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location $root

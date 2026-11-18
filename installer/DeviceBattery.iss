@@ -4,7 +4,7 @@
 ; Build with installer\build-installer.ps1 (publishes the app, then runs ISCC).
 
 #ifndef AppVersion
-  #define AppVersion "1.1.0"
+  #define AppVersion "1.1.1"
 #endif
 #define Root ".."
 #define ExeName "DeviceBattery.exe"

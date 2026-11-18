@@ -23,6 +23,8 @@ public sealed class PnpBatteryProvider : IBatteryProvider
     {
         var byContainer = new Dictionary<string, DeviceBatteryInfo>();
         var classesByContainer = new Dictionary<string, HashSet<string>>();
+        var connectedContainers = new HashSet<string>();
+        var connectedKeys = new HashSet<string>(); // battery nodes without a ContainerId that are connected
         IntPtr set = IntPtr.Zero;
         try
         {
@@ -35,6 +37,8 @@ public sealed class PnpBatteryProvider : IBatteryProvider
             {
                 // Remember sibling-node classes (Keyboard / Mouse / MEDIA ...) to infer the device kind.
                 Guid cid = ReadGuid(set, ref data, ContainerIdKey) ?? Guid.Empty;
+                if (cid != Guid.Empty && ReadBool(set, ref data, IsConnectedKey) == true)
+                    connectedContainers.Add(cid.ToString("N"));
                 if (cid != Guid.Empty && ReadString(set, ref data, ClassKey) is { } cls)
                 {
                     string ck = cid.ToString("N");
@@ -47,10 +51,10 @@ public sealed class PnpBatteryProvider : IBatteryProvider
                 if (battery is null or < 0 or > 100)
                     continue;
 
-                // Missing property => treat as connected (node is present); false => paired but offline.
+                // Missing property => treat as connected (node is present); false => this node is offline.
+                // The battery often sits on a profile node (e.g. HFP) that stays "not connected" while the
+                // device itself is connected, so the final decision uses all nodes of the container (below).
                 bool connected = ReadBool(set, ref data, IsConnectedKey) ?? true;
-                if (!connected)
-                    continue;
 
                 string instanceId = ReadInstanceId(set, ref data);
                 string name = ReadString(set, ref data, FriendlyName)
@@ -61,6 +65,7 @@ public sealed class PnpBatteryProvider : IBatteryProvider
                 Guid container = ReadGuid(set, ref data, ContainerIdKey) ?? Guid.Empty;
                 string key = container == Guid.Empty ? instanceId : container.ToString("N");
 
+                if (connected) connectedKeys.Add(key);
                 var info = new DeviceBatteryInfo(key, name, battery.Value, GuessConnection(instanceId), true);
 
                 // Duplicate sub-nodes of the same device: keep the first one that has a real name.
@@ -79,6 +84,7 @@ public sealed class PnpBatteryProvider : IBatteryProvider
         }
 
         return byContainer.Values
+            .Where(d => connectedKeys.Contains(d.Id) || connectedContainers.Contains(d.Id))
             .Select(d => d with { Kind = ResolveKind(d, classesByContainer) })
             .OrderBy(d => d.DeviceName, StringComparer.OrdinalIgnoreCase)
             .ToList();

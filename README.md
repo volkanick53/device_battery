@@ -57,10 +57,10 @@ The taskbar readout is a layered **child window of the taskbar** (`Shell_TrayWnd
 Requires the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0). To also build the installer, install [Inno Setup 6](https://jrsoftware.org/isdl.php) (`winget install JRSoftware.InnoSetup`).
 
 ```powershell
-installer\build-installer.ps1 -Version 1.1.0
+installer\build-installer.ps1 -Version 1.1.1
 ```
 
-This publishes a self-contained single-file exe to `dist\self-contained`, compiles `dist\DeviceBattery-Setup-1.1.0.exe` and creates a portable zip. Do **not** add `-p:EnableCompressionInSingleFile=true`: the exe becomes smaller on disk but the app then needs ~45 MB of RAM instead of ~12 MB (the installer compresses it anyway).
+This publishes a self-contained single-file exe to `dist\self-contained`, compiles `dist\DeviceBattery-Setup-1.1.1.exe` and creates a portable zip. Do **not** add `-p:EnableCompressionInSingleFile=true`: the exe becomes smaller on disk but the app then needs ~45 MB of RAM instead of ~12 MB (the installer compresses it anyway).
 
 Just the exe, without the installer:
 

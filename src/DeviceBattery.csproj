@@ -4,7 +4,7 @@
     <OutputType>WinExe</OutputType>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>app.ico</ApplicationIcon>
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
     <Product>Device Battery</Product>
     <AssemblyTitle>Device Battery</AssemblyTitle>
     <Description>Battery levels of wireless keyboards, mice and headsets on the Windows taskbar</Description>
